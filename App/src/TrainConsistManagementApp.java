@@ -4,51 +4,69 @@ import java.util.*;
 class Bogie {
     String bogieId;
     String type;
+    int capacity;
 
-    Bogie(String bogieId, String type) {
+    Bogie(String bogieId, String type, int capacity) {
         this.bogieId = bogieId;
         this.type = type;
+        this.capacity = capacity;
     }
 
     @Override
     public String toString() {
-        return bogieId + " (" + type + ")";
+        return bogieId + " (" + type + ", Cap:" + capacity + ")";
     }
 }
 
-// Train class using LinkedHashSet
+// Train class using HashMap
 class Train {
     String trainName;
-    LinkedHashSet<String> bogieIds; // preserves insertion order
-    ArrayList<Bogie> bogies;
+    HashMap<String, Integer> bogieCapacityMap; // bogieId → capacity
 
     Train(String trainName) {
         this.trainName = trainName;
-        bogieIds = new LinkedHashSet<>();
-        bogies = new ArrayList<>();
+        bogieCapacityMap = new HashMap<>();
     }
 
-    // Add bogie (unique + maintains order)
+    // Add bogie
     void addBogie(Bogie b) {
-        if (bogieIds.add(b.bogieId)) {
-            bogies.add(b);
-            System.out.println("Bogie added: " + b);
+        bogieCapacityMap.put(b.bogieId, b.capacity);
+        System.out.println("Added: " + b);
+    }
+
+    // Get capacity of a bogie
+    void getCapacity(String bogieId) {
+        if (bogieCapacityMap.containsKey(bogieId)) {
+            System.out.println("Capacity of " + bogieId + ": " + bogieCapacityMap.get(bogieId));
         } else {
-            System.out.println("Duplicate Bogie ID not allowed: " + b.bogieId);
+            System.out.println("Bogie not found: " + bogieId);
         }
     }
 
-    // Display bogies in insertion order
-    void displayBogies() {
+    // Remove bogie
+    void removeBogie(String bogieId) {
+        if (bogieCapacityMap.remove(bogieId) != null) {
+            System.out.println("Removed bogie: " + bogieId);
+        } else {
+            System.out.println("Bogie not found!");
+        }
+    }
+
+    // Display all bogies
+    void displayAll() {
         System.out.println("\nTrain: " + trainName);
-        for (Bogie b : bogies) {
-            System.out.println(b);
+        for (Map.Entry<String, Integer> entry : bogieCapacityMap.entrySet()) {
+            System.out.println(entry.getKey() + " → Capacity: " + entry.getValue());
         }
     }
 
-    // Display IDs in insertion order
-    void displayBogieIDs() {
-        System.out.println("\nBogie IDs (Insertion Order): " + bogieIds);
+    // Total capacity
+    void totalCapacity() {
+        int total = 0;
+        for (int cap : bogieCapacityMap.values()) {
+            total += cap;
+        }
+        System.out.println("\nTotal Capacity: " + total);
     }
 }
 
@@ -59,15 +77,22 @@ public class TrainConsistManagementApp {
 
         Train train = new Train("Chennai Express");
 
-        train.addBogie(new Bogie("S2", "Sleeper"));
-        train.addBogie(new Bogie("A1", "AC"));
-        train.addBogie(new Bogie("S1", "Sleeper"));
-        train.addBogie(new Bogie("G1", "General"));
+        train.addBogie(new Bogie("S1", "Sleeper", 72));
+        train.addBogie(new Bogie("S2", "Sleeper", 72));
+        train.addBogie(new Bogie("A1", "AC", 50));
+        train.addBogie(new Bogie("G1", "General", 100));
 
-        // Duplicate test
-        train.addBogie(new Bogie("S2", "Sleeper"));
+        train.displayAll();
 
-        train.displayBogies();
-        train.displayBogieIDs();
+        // Lookup
+        train.getCapacity("A1");
+
+        // Remove
+        train.removeBogie("S2");
+
+        train.displayAll();
+
+        // Total capacity
+        train.totalCapacity();
     }
 }
