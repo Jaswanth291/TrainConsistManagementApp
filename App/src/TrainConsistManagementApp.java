@@ -16,21 +16,21 @@ class Bogie {
     }
 }
 
-// Train class using TreeSet (SortedSet)
+// Train class using LinkedHashSet
 class Train {
     String trainName;
-    SortedSet<String> bogieIds; // automatically sorted
+    LinkedHashSet<String> bogieIds; // preserves insertion order
     ArrayList<Bogie> bogies;
 
     Train(String trainName) {
         this.trainName = trainName;
-        bogieIds = new TreeSet<>(); // TreeSet = SortedSet
+        bogieIds = new LinkedHashSet<>();
         bogies = new ArrayList<>();
     }
 
-    // Add bogie (unique + sorted)
+    // Add bogie (unique + maintains order)
     void addBogie(Bogie b) {
-        if (bogieIds.add(b.bogieId)) { // add returns false if duplicate
+        if (bogieIds.add(b.bogieId)) {
             bogies.add(b);
             System.out.println("Bogie added: " + b);
         } else {
@@ -38,7 +38,7 @@ class Train {
         }
     }
 
-    // Display all bogies
+    // Display bogies in insertion order
     void displayBogies() {
         System.out.println("\nTrain: " + trainName);
         for (Bogie b : bogies) {
@@ -46,20 +46,14 @@ class Train {
         }
     }
 
-    // Display sorted bogie IDs
-    void displaySortedIDs() {
-        System.out.println("\nSorted Bogie IDs: " + bogieIds);
-    }
-
-    // Show subset (range)
-    void displayRange(String from, String to) {
-        System.out.println("\nRange (" + from + " to " + to + "): " +
-                ((TreeSet<String>) bogieIds).subSet(from, to));
+    // Display IDs in insertion order
+    void displayBogieIDs() {
+        System.out.println("\nBogie IDs (Insertion Order): " + bogieIds);
     }
 }
 
 // Main class
-public class UC4MaintainOrderedBogieIDs {
+public class TrainConsistManagementApp {
 
     public static void main(String[] args) {
 
@@ -71,12 +65,9 @@ public class UC4MaintainOrderedBogieIDs {
         train.addBogie(new Bogie("G1", "General"));
 
         // Duplicate test
-        train.addBogie(new Bogie("S1", "Sleeper"));
+        train.addBogie(new Bogie("S2", "Sleeper"));
 
         train.displayBogies();
-        train.displaySortedIDs();
-
-        // Range query
-        train.displayRange("A1", "S2");
+        train.displayBogieIDs();
     }
 }
