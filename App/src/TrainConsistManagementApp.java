@@ -1,62 +1,68 @@
 import java.util.*;
 
-// Coach class
-class Coach {
-    String coachId;
+// Bogie (Coach) class
+class Bogie {
+    String bogieId;
     String type; // Sleeper / AC / General
     int capacity;
 
-    Coach(String coachId, String type, int capacity) {
-        this.coachId = coachId;
+    Bogie(String bogieId, String type, int capacity) {
+        this.bogieId = bogieId;
         this.type = type;
         this.capacity = capacity;
     }
 
     @Override
     public String toString() {
-        return coachId + " (" + type + ", Cap:" + capacity + ")";
+        return bogieId + " (" + type + ", Cap:" + capacity + ")";
     }
 }
 
-// Train class
+// Train class using ArrayList
 class Train {
     String trainName;
-    List<Coach> coaches;
+    ArrayList<Bogie> bogies;
 
     Train(String trainName) {
         this.trainName = trainName;
-        this.coaches = new ArrayList<>();
+        bogies = new ArrayList<>();
     }
 
-    // Add coach
-    void addCoach(Coach coach) {
-        coaches.add(coach);
+    // Add bogie at end
+    void addBogie(Bogie b) {
+        bogies.add(b);
+        System.out.println("Bogie added: " + b);
     }
 
-    // Display summary
-    void displaySummary() {
-        System.out.println("Train Name: " + trainName);
-        System.out.println("Total Coaches: " + coaches.size());
-
-        int totalCapacity = 0;
-        Map<String, Integer> typeCount = new HashMap<>();
-
-        for (Coach c : coaches) {
-            totalCapacity += c.capacity;
-
-            typeCount.put(c.type, typeCount.getOrDefault(c.type, 0) + 1);
+    // Add bogie at specific position
+    void addBogieAt(int index, Bogie b) {
+        if (index >= 0 && index <= bogies.size()) {
+            bogies.add(index, b);
+            System.out.println("Bogie added at position " + index + ": " + b);
+        } else {
+            System.out.println("Invalid position!");
         }
+    }
 
-        System.out.println("Total Capacity: " + totalCapacity);
-
-        System.out.println("Coach Type Summary:");
-        for (String type : typeCount.keySet()) {
-            System.out.println(type + ": " + typeCount.get(type));
+    // Remove bogie
+    void removeBogie(String bogieId) {
+        Iterator<Bogie> it = bogies.iterator();
+        while (it.hasNext()) {
+            Bogie b = it.next();
+            if (b.bogieId.equals(bogieId)) {
+                it.remove();
+                System.out.println("Bogie removed: " + bogieId);
+                return;
+            }
         }
+        System.out.println("Bogie not found!");
+    }
 
-        System.out.println("\nCoach Details:");
-        for (Coach c : coaches) {
-            System.out.println(c);
+    // Display all bogies
+    void displayBogies() {
+        System.out.println("\nTrain: " + trainName);
+        for (Bogie b : bogies) {
+            System.out.println(b);
         }
     }
 }
@@ -68,13 +74,21 @@ public class TrainConsistManagementApp {
 
         Train train = new Train("Chennai Express");
 
-        // Initialize coaches
-        train.addCoach(new Coach("S1", "Sleeper", 72));
-        train.addCoach(new Coach("S2", "Sleeper", 72));
-        train.addCoach(new Coach("A1", "AC", 50));
-        train.addCoach(new Coach("G1", "General", 100));
+        // Add bogies
+        train.addBogie(new Bogie("S1", "Sleeper", 72));
+        train.addBogie(new Bogie("S2", "Sleeper", 72));
+        train.addBogie(new Bogie("A1", "AC", 50));
 
-        // Display summary
-        train.displaySummary();
+        // Insert at specific position
+        train.addBogieAt(1, new Bogie("G1", "General", 100));
+
+        // Display
+        train.displayBogies();
+
+        // Remove a bogie
+        train.removeBogie("S2");
+
+        // Display again
+        train.displayBogies();
     }
 }
