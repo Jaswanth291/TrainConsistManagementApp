@@ -1,4 +1,4 @@
-import java.util.Scanner;
+import java.util.*;
 
 public class TrainConsistManagementApp {
 
@@ -34,20 +34,31 @@ public class TrainConsistManagementApp {
         }
     }
 
-    // 🔍 Linear Search Method
-    public static int linearSearch(Bogie[] bogies, String targetId) {
-        for (int i = 0; i < bogies.length; i++) {
-            if (bogies[i].getBogieId().equalsIgnoreCase(targetId)) {
-                return i; // Return index if found
+    // 🔍 Binary Search Method
+    public static int binarySearch(Bogie[] bogies, String targetId) {
+        int left = 0;
+        int right = bogies.length - 1;
+
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            int comparison = bogies[mid].getBogieId()
+                    .compareToIgnoreCase(targetId);
+
+            if (comparison == 0) {
+                return mid; // Found
+            } else if (comparison < 0) {
+                left = mid + 1; // Search in the right half
+            } else {
+                right = mid - 1; // Search in the left half
             }
         }
-        return -1; // Return -1 if not found
+        return -1; // Not found
     }
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        // Creating an array of bogies
+        // Creating an array of bogies (unsorted)
         Bogie[] bogies = {
                 new Bogie("B1", 72, "Sleeper"),
                 new Bogie("A1", 50, "AC"),
@@ -57,20 +68,23 @@ public class TrainConsistManagementApp {
                 new Bogie("P1", 0, "Power Car")
         };
 
-        // Display all bogies
-        System.out.println("=== Train Bogies ===");
+        // 🔹 Step 1: Sort bogies by Bogie ID
+        Arrays.sort(bogies, Comparator.comparing(Bogie::getBogieId,
+                String.CASE_INSENSITIVE_ORDER));
+
+        System.out.println("=== Sorted Bogies by ID ===");
         for (Bogie b : bogies) {
             System.out.println(b);
         }
 
-        // Accept user input for search
+        // 🔹 Step 2: Accept user input
         System.out.print("\nEnter Bogie ID to search: ");
         String searchId = scanner.nextLine().trim();
 
-        // Perform linear search
-        int index = linearSearch(bogies, searchId);
+        // 🔹 Step 3: Perform Binary Search
+        int index = binarySearch(bogies, searchId);
 
-        // Display result
+        // 🔹 Step 4: Display Result
         if (index != -1) {
             System.out.println("\n✅ Bogie Found at Index: " + index);
             System.out.println("Details: " + bogies[index]);
