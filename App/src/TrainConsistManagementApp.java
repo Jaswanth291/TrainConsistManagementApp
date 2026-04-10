@@ -1,18 +1,29 @@
 import java.util.*;
-import java.util.stream.*;
 
 public class TrainConsistManagementApp {
 
-    // Bogie class representing each train bogie
+    // ✅ Custom Exception for Invalid Capacity
+    static class InvalidBogieCapacityException extends Exception {
+        public InvalidBogieCapacityException(String message) {
+            super(message);
+        }
+    }
+
+    // ✅ Bogie Class
     static class Bogie {
         private String bogieId;
         private int capacity;
         private String type;
 
-        public Bogie(String bogieId, int capacity, String type) {
+        public Bogie(String bogieId, int capacity, String type)
+                throws InvalidBogieCapacityException {
             this.bogieId = bogieId;
-            this.capacity = capacity;
             this.type = type;
+            setCapacity(capacity); // Validation through setter
+        }
+
+        public String getBogieId() {
+            return bogieId;
         }
 
         public int getCapacity() {
@@ -23,85 +34,80 @@ public class TrainConsistManagementApp {
             return type;
         }
 
-        // Method to identify passenger bogies
+        // Method to determine if a bogie is a passenger bogie
         public boolean isPassengerBogie() {
             return type.equalsIgnoreCase("Sleeper") ||
                     type.equalsIgnoreCase("AC") ||
                     type.equalsIgnoreCase("General") ||
                     type.equalsIgnoreCase("Chair Car");
         }
-    }
 
-    public static void main(String[] args) {
+        // ✅ Capacity validation logic
+        public void setCapacity(int capacity)
+                throws InvalidBogieCapacityException {
 
-        // Generate a large dataset of bogies for performance testing
-        List<Bogie> bogies = new ArrayList<>();
-        String[] types = {"Sleeper", "AC", "General", "Chair Car", "Luggage", "Power Car"};
-        Random random = new Random();
+            if (capacity < 0) {
+                throw new InvalidBogieCapacityException(
+                        "Capacity cannot be negative for Bogie ID: " + bogieId);
+            }
 
-        int dataSize = 1_000_000; // Number of bogies
+            if (isPassengerBogie() && capacity == 0) {
+                throw new InvalidBogieCapacityException(
+                        "Passenger bogie must have capacity greater than zero. Bogie ID: "
+                                + bogieId);
+            }
 
-        for (int i = 0; i < dataSize; i++) {
-            String type = types[random.nextInt(types.length)];
-            int capacity = type.equals("Luggage") || type.equals("Power Car")
-                    ? 0
-                    : 40 + random.nextInt(60); // Capacity between 40 and 100
-            bogies.add(new Bogie("B" + i, capacity, type));
+            if (capacity > 200) {
+                throw new InvalidBogieCapacityException(
+                        "Capacity exceeds the maximum allowed limit (200). Bogie ID: "
+                                + bogieId);
+            }
+
+            this.capacity = capacity;
         }
 
-        System.out.println("Dataset size: " + dataSize);
+        @Override
+        public String toString() {
+            return "Bogie ID: " + bogieId +
+                    ", Capacity: " + capacity +
+                    ", Type: " + type;
+        }
+    }
 
-        // 🔹 1. Using Traditional For-Loop
-        long startLoop = System.nanoTime();
+    // ✅ Main Method
+    public static void main(String[] args) {
+        List<Bogie> bogies = new ArrayList<>();
 
-        int totalSeatsLoop = 0;
-        for (Bogie b : bogies) {
-            if (b.isPassengerBogie()) {
-                totalSeatsLoop += b.getCapacity();
+        // Sample data including invalid cases
+        Object[][] sampleData = {
+                {"B1", 72, "Sleeper"},
+                {"A1", 50, "AC"},
+                {"G1", 90, "General"},
+                {"L1", 0, "Luggage"},      // Valid
+                {"P1", 0, "Power Car"},    // Valid
+                {"S1", -10, "Sleeper"},    // Invalid: Negative
+                {"C1", 0, "Chair Car"},    // Invalid: Zero capacity for passenger
+                {"X1", 250, "AC"}          // Invalid: Exceeds limit
+        };
+
+        System.out.println("=== Bogie Capacity Validation ===");
+
+        for (Object[] data : sampleData) {
+            String id = (String) data[0];
+            int capacity = (int) data[1];
+            String type = (String) data[2];
+
+            try {
+                Bogie bogie = new Bogie(id, capacity, type);
+                bogies.add(bogie);
+                System.out.println("✅ Added: " + bogie);
+            } catch (InvalidBogieCapacityException e) {
+                System.out.println("❌ Error: " + e.getMessage());
             }
         }
 
-        long endLoop = System.nanoTime();
-        long loopTime = endLoop - startLoop;
-
-        // 🔹 2. Using Sequential Stream
-        long startStream = System.nanoTime();
-
-        int totalSeatsStream = bogies.stream()
-                .filter(Bogie::isPassengerBogie)
-                .mapToInt(Bogie::getCapacity)
-                .sum();
-
-        long endStream = System.nanoTime();
-        long streamTime = endStream - startStream;
-
-        // 🔹 3. Using Parallel Stream (Optional Enhancement)
-        long startParallel = System.nanoTime();
-
-        int totalSeatsParallel = bogies.parallelStream()
-                .filter(Bogie::isPassengerBogie)
-                .mapToInt(Bogie::getCapacity)
-                .sum();
-
-        long endParallel = System.nanoTime();
-        long parallelTime = endParallel - startParallel;
-
-        // Display results
-        System.out.println("\n=== Results ===");
-        System.out.println("Total Seats (Loop): " + totalSeatsLoop);
-        System.out.println("Total Seats (Stream): " + totalSeatsStream);
-        System.out.println("Total Seats (Parallel Stream): " + totalSeatsParallel);
-
-        System.out.println("\n=== Performance Comparison (in milliseconds) ===");
-        System.out.printf("For-Loop Time: %.3f ms%n", loopTime / 1_000_000.0);
-        System.out.printf("Stream Time: %.3f ms%n", streamTime / 1_000_000.0);
-        System.out.printf("Parallel Stream Time: %.3f ms%n", parallelTime / 1_000_000.0);
-
-        // Determine the fastest approach
-        long minTime = Math.min(loopTime, Math.min(streamTime, parallelTime));
-        System.out.println("\nFastest Approach: " +
-                (minTime == loopTime ? "For-Loop"
-                        : (minTime == streamTime ? "Sequential Stream"
-                        : "Parallel Stream")));
+        // Display valid bogies
+        System.out.println("\n=== Valid Bogies in Train ===");
+        bogies.forEach(System.out::println);
     }
 }
