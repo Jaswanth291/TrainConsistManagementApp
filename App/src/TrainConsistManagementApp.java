@@ -1,119 +1,104 @@
-import java.util.regex.Pattern;
+import java.util.*;
 
 public class TrainConsistManagementApp {
 
-    // Regex pattern for validating cargo codes
-    private static final Pattern CARGO_CODE_PATTERN =
-            Pattern.compile("^CG[A-Z]{3}\\d{3}$");
-
-    // Custom Exception for invalid cargo assignment
-    static class InvalidCargoException extends Exception {
-        public InvalidCargoException(String message) {
-            super(message);
-        }
-    }
-
-    // GoodsBogie class representing a cargo bogie
-    static class GoodsBogie {
+    // Bogie class representing each train bogie
+    static class Bogie {
         private String bogieId;
-        private boolean brakeCertified;
-        private boolean hazardous;
-        private boolean hazardCompliant;
-        private String cargoCode;
-        private double loadInTons;
+        private int capacity;
+        private String type;
 
-        public GoodsBogie(String bogieId, boolean brakeCertified,
-                          boolean hazardous, boolean hazardCompliant) {
+        public Bogie(String bogieId, int capacity, String type) {
             this.bogieId = bogieId;
-            this.brakeCertified = brakeCertified;
-            this.hazardous = hazardous;
-            this.hazardCompliant = hazardCompliant;
+            this.capacity = capacity;
+            this.type = type;
         }
 
-        // Method to assign cargo safely
-        public void assignCargo(String cargoCode, double loadInTons)
-                throws InvalidCargoException {
+        public String getBogieId() {
+            return bogieId;
+        }
 
-            if (!CARGO_CODE_PATTERN.matcher(cargoCode).matches()) {
-                throw new InvalidCargoException(
-                        "Invalid Cargo Code for Bogie ID: " + bogieId);
-            }
+        public int getCapacity() {
+            return capacity;
+        }
 
-            if (loadInTons <= 0 || loadInTons > 100) {
-                throw new InvalidCargoException(
-                        "Load must be between 1 and 100 tons for Bogie ID: " + bogieId);
-            }
+        public String getType() {
+            return type;
+        }
 
-            if (!brakeCertified) {
-                throw new InvalidCargoException(
-                        "Brake system not certified for Bogie ID: " + bogieId);
-            }
-
-            if (hazardous && !hazardCompliant) {
-                throw new InvalidCargoException(
-                        "Hazardous cargo compliance missing for Bogie ID: " + bogieId);
-            }
-
-            this.cargoCode = cargoCode;
-            this.loadInTons = loadInTons;
+        // Identify passenger bogies
+        public boolean isPassengerBogie() {
+            return type.equalsIgnoreCase("Sleeper") ||
+                    type.equalsIgnoreCase("AC") ||
+                    type.equalsIgnoreCase("General") ||
+                    type.equalsIgnoreCase("Chair Car");
         }
 
         @Override
         public String toString() {
-            return "GoodsBogie{" +
-                    "bogieId='" + bogieId + '\'' +
-                    ", cargoCode='" + cargoCode + '\'' +
-                    ", loadInTons=" + loadInTons +
-                    ", brakeCertified=" + brakeCertified +
-                    ", hazardous=" + hazardous +
-                    ", hazardCompliant=" + hazardCompliant +
-                    '}';
+            return "Bogie ID: " + bogieId +
+                    ", Capacity: " + capacity +
+                    ", Type: " + type;
+        }
+    }
+
+    // 🔹 Bubble Sort Algorithm for Bogies
+    public static void bubbleSortByCapacity(List<Bogie> bogies) {
+        int n = bogies.size();
+        boolean swapped;
+
+        for (int i = 0; i < n - 1; i++) {
+            swapped = false;
+
+            for (int j = 0; j < n - i - 1; j++) {
+                if (bogies.get(j).getCapacity() >
+                        bogies.get(j + 1).getCapacity()) {
+
+                    // Swap bogies
+                    Bogie temp = bogies.get(j);
+                    bogies.set(j, bogies.get(j + 1));
+                    bogies.set(j + 1, temp);
+                    swapped = true;
+                }
+            }
+
+            // Optimization: Stop if no swaps occurred
+            if (!swapped) {
+                break;
+            }
         }
     }
 
     public static void main(String[] args) {
 
-        System.out.println("=== Safe Cargo Assignment ===");
+        // Creating a list of bogies
+        List<Bogie> allBogies = Arrays.asList(
+                new Bogie("B1", 72, "Sleeper"),
+                new Bogie("A1", 50, "AC"),
+                new Bogie("G1", 90, "General"),
+                new Bogie("C1", 60, "Chair Car"),
+                new Bogie("L1", 0, "Luggage"),
+                new Bogie("P1", 0, "Power Car"),
+                new Bogie("S1", 72, "Sleeper")
+        );
 
-        // Sample goods bogies
-        GoodsBogie[] bogies = {
-                new GoodsBogie("G001", true, false, true),
-                new GoodsBogie("G002", true, true, true),
-                new GoodsBogie("G003", false, false, true),
-                new GoodsBogie("G004", true, true, false)
-        };
-
-        // Cargo assignments: {cargoCode, load}
-        Object[][] cargoAssignments = {
-                {"CGOIL123", 80.0},   // Valid
-                {"CGGAS456", 95.0},   // Valid hazardous
-                {"INVALID", 50.0},    // Invalid cargo code
-                {"CGCHE789", 120.0}   // Load exceeds limit
-        };
-
-        // Perform safe cargo assignment
-        for (int i = 0; i < bogies.length; i++) {
-            GoodsBogie bogie = bogies[i];
-            String cargoCode = (String) cargoAssignments[i][0];
-            double load = (double) cargoAssignments[i][1];
-
-            try {
-                System.out.println("\nAssigning cargo to Bogie ID: " + bogie.bogieId);
-                bogie.assignCargo(cargoCode, load);
-                System.out.println("✅ Cargo assigned successfully.");
-            } catch (InvalidCargoException e) {
-                System.out.println("❌ Error: " + e.getMessage());
-            } finally {
-                // This block always executes
-                System.out.println("🔄 Assignment attempt completed for Bogie ID: "
-                        + bogie.bogieId);
+        // Filter only passenger bogies
+        List<Bogie> passengerBogies = new ArrayList<>();
+        for (Bogie b : allBogies) {
+            if (b.isPassengerBogie()) {
+                passengerBogies.add(b);
             }
         }
 
-        // Display final state of all bogies
-        System.out.println("\n=== Final Bogie Status ===");
-        for (GoodsBogie bogie : bogies) {
-            System.out.println(bogie);
-        }
+        // Display before sorting
+        System.out.println("=== Passenger Bogies Before Sorting ===");
+        passengerBogies.forEach(System.out::println);
+
+        // Apply Bubble Sort
+        bubbleSortByCapacity(passengerBogies);
+
+        // Display after sorting
+        System.out.println("\n=== Passenger Bogies After Sorting (Ascending) ===");
+        passengerBogies.forEach(System.out::println);
     }
 }
