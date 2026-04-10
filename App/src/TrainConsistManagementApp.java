@@ -1,15 +1,16 @@
 import java.util.*;
 
+// Public class name as per previous use cases
 public class TrainConsistManagementApp {
 
-    // Bogie class representing each train bogie
-    static class Bogie {
+    // Bogie class implementing Comparable for natural sorting by bogieId
+    static class Bogie implements Comparable<Bogie> {
         private String bogieId;
         private int capacity;
         private String type;
 
         public Bogie(String bogieId, int capacity, String type) {
-            this.bogieId = bogieId;
+            this.bogieId = bogieId.toUpperCase(); // Normalize for case-insensitive search
             this.capacity = capacity;
             this.type = type;
         }
@@ -26,6 +27,12 @@ public class TrainConsistManagementApp {
             return type;
         }
 
+        // Natural ordering based on Bogie ID
+        @Override
+        public int compareTo(Bogie other) {
+            return this.bogieId.compareToIgnoreCase(other.bogieId);
+        }
+
         @Override
         public String toString() {
             return "Bogie ID: " + bogieId +
@@ -34,63 +41,83 @@ public class TrainConsistManagementApp {
         }
     }
 
-    // 🔍 Binary Search Method
-    public static int binarySearch(Bogie[] bogies, String targetId) {
-        int left = 0;
-        int right = bogies.length - 1;
-
-        while (left <= right) {
-            int mid = left + (right - left) / 2;
-            int comparison = bogies[mid].getBogieId()
-                    .compareToIgnoreCase(targetId);
-
-            if (comparison == 0) {
-                return mid; // Found
-            } else if (comparison < 0) {
-                left = mid + 1; // Search in the right half
-            } else {
-                right = mid - 1; // Search in the left half
-            }
+    // Method to display all bogies
+    public static void displayBogies(Bogie[] bogies) {
+        System.out.println("\n=== List of Bogies ===");
+        for (Bogie b : bogies) {
+            System.out.println(b);
         }
-        return -1; // Not found
     }
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        // Creating an array of bogies (unsorted)
+        // Initialize an array of bogies (unsorted)
         Bogie[] bogies = {
                 new Bogie("B1", 72, "Sleeper"),
                 new Bogie("A1", 50, "AC"),
                 new Bogie("G1", 90, "General"),
                 new Bogie("C1", 60, "Chair Car"),
                 new Bogie("L1", 0, "Luggage"),
-                new Bogie("P1", 0, "Power Car")
+                new Bogie("P1", 0, "Power Car"),
+                new Bogie("S1", 72, "Sleeper"),
+                new Bogie("A2", 55, "AC")
         };
 
-        // 🔹 Step 1: Sort bogies by Bogie ID
-        Arrays.sort(bogies, Comparator.comparing(Bogie::getBogieId,
-                String.CASE_INSENSITIVE_ORDER));
+        // Step 1: Sort the bogies using Arrays.sort()
+        Arrays.sort(bogies);
 
-        System.out.println("=== Sorted Bogies by ID ===");
-        for (Bogie b : bogies) {
-            System.out.println(b);
-        }
+        System.out.println("=== Bogies Sorted by Bogie ID ===");
+        displayBogies(bogies);
 
-        // 🔹 Step 2: Accept user input
-        System.out.print("\nEnter Bogie ID to search: ");
-        String searchId = scanner.nextLine().trim();
+        // Step 2: Menu-driven binary search
+        int choice;
+        do {
+            System.out.println("\n=== Binary Search Menu ===");
+            System.out.println("1. Search for a Bogie by ID");
+            System.out.println("2. Display All Bogies");
+            System.out.println("3. Exit");
+            System.out.print("Enter your choice: ");
 
-        // 🔹 Step 3: Perform Binary Search
-        int index = binarySearch(bogies, searchId);
+            while (!scanner.hasNextInt()) {
+                System.out.print("Invalid input. Please enter a number: ");
+                scanner.next();
+            }
+            choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
 
-        // 🔹 Step 4: Display Result
-        if (index != -1) {
-            System.out.println("\n✅ Bogie Found at Index: " + index);
-            System.out.println("Details: " + bogies[index]);
-        } else {
-            System.out.println("\n❌ Bogie with ID '" + searchId + "' not found.");
-        }
+            switch (choice) {
+                case 1:
+                    System.out.print("Enter Bogie ID to search: ");
+                    String searchId = scanner.nextLine().trim().toUpperCase();
+
+                    // Create a dummy bogie object for searching
+                    Bogie key = new Bogie(searchId, 0, "");
+
+                    // Perform binary search
+                    int index = Arrays.binarySearch(bogies, key);
+
+                    if (index >= 0) {
+                        System.out.println("✅ Bogie Found at Index: " + index);
+                        System.out.println("Details: " + bogies[index]);
+                    } else {
+                        System.out.println("❌ Bogie with ID '" + searchId + "' not found.");
+                    }
+                    break;
+
+                case 2:
+                    displayBogies(bogies);
+                    break;
+
+                case 3:
+                    System.out.println("Exiting application. Thank you!");
+                    break;
+
+                default:
+                    System.out.println("❌ Invalid choice. Please try again.");
+            }
+
+        } while (choice != 3);
 
         scanner.close();
     }
