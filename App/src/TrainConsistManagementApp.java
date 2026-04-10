@@ -2,103 +2,37 @@ import java.util.*;
 
 public class TrainConsistManagementApp {
 
-    // Bogie class representing each train bogie
-    static class Bogie {
-        private String bogieId;
-        private int capacity;
-        private String type;
-
-        public Bogie(String bogieId, int capacity, String type) {
-            this.bogieId = bogieId;
-            this.capacity = capacity;
-            this.type = type;
-        }
-
-        public String getBogieId() {
-            return bogieId;
-        }
-
-        public int getCapacity() {
-            return capacity;
-        }
-
-        public String getType() {
-            return type;
-        }
-
-        // Identify passenger bogies
-        public boolean isPassengerBogie() {
-            return type.equalsIgnoreCase("Sleeper") ||
-                    type.equalsIgnoreCase("AC") ||
-                    type.equalsIgnoreCase("General") ||
-                    type.equalsIgnoreCase("Chair Car");
-        }
-
-        @Override
-        public String toString() {
-            return "Bogie ID: " + bogieId +
-                    ", Capacity: " + capacity +
-                    ", Type: " + type;
-        }
-    }
-
-    // 🔹 Bubble Sort Algorithm for Bogies
-    public static void bubbleSortByCapacity(List<Bogie> bogies) {
-        int n = bogies.size();
-        boolean swapped;
-
-        for (int i = 0; i < n - 1; i++) {
-            swapped = false;
-
-            for (int j = 0; j < n - i - 1; j++) {
-                if (bogies.get(j).getCapacity() >
-                        bogies.get(j + 1).getCapacity()) {
-
-                    // Swap bogies
-                    Bogie temp = bogies.get(j);
-                    bogies.set(j, bogies.get(j + 1));
-                    bogies.set(j + 1, temp);
-                    swapped = true;
-                }
-            }
-
-            // Optimization: Stop if no swaps occurred
-            if (!swapped) {
-                break;
-            }
-        }
-    }
-
     public static void main(String[] args) {
 
-        // Creating a list of bogies
-        List<Bogie> allBogies = Arrays.asList(
-                new Bogie("B1", 72, "Sleeper"),
-                new Bogie("A1", 50, "AC"),
-                new Bogie("G1", 90, "General"),
-                new Bogie("C1", 60, "Chair Car"),
-                new Bogie("L1", 0, "Luggage"),
-                new Bogie("P1", 0, "Power Car"),
-                new Bogie("S1", 72, "Sleeper")
-        );
+        // Array of bogie names (IDs)
+        String[] bogieNames = {
+                "B1", "A1", "G1", "S1", "C1", "L1", "P1", "A2", "B2"
+        };
 
-        // Filter only passenger bogies
-        List<Bogie> passengerBogies = new ArrayList<>();
-        for (Bogie b : allBogies) {
-            if (b.isPassengerBogie()) {
-                passengerBogies.add(b);
-            }
-        }
+        // Display original array
+        System.out.println("=== Original Bogie Names ===");
+        System.out.println(Arrays.toString(bogieNames));
 
-        // Display before sorting
-        System.out.println("=== Passenger Bogies Before Sorting ===");
-        passengerBogies.forEach(System.out::println);
+        // 🔹 1. Sort in Ascending Order (Natural/Alphabetical Order)
+        Arrays.sort(bogieNames);
+        System.out.println("\n=== Sorted Bogie Names (Ascending) ===");
+        System.out.println(Arrays.toString(bogieNames));
 
-        // Apply Bubble Sort
-        bubbleSortByCapacity(passengerBogies);
+        // 🔹 2. Sort in Descending Order
+        Arrays.sort(bogieNames, Collections.reverseOrder());
+        System.out.println("\n=== Sorted Bogie Names (Descending) ===");
+        System.out.println(Arrays.toString(bogieNames));
 
-        // Display after sorting
-        System.out.println("\n=== Passenger Bogies After Sorting (Ascending) ===");
-        passengerBogies.forEach(System.out::println);
+        // 🔹 3. Case-Insensitive Sorting Example
+        String[] mixedCaseBogieNames = {
+                "b1", "A1", "g1", "S1", "c1", "L1", "p1"
+        };
+
+        System.out.println("\n=== Mixed Case Bogie Names (Original) ===");
+        System.out.println(Arrays.toString(mixedCaseBogieNames));
+
+        Arrays.sort(mixedCaseBogieNames, String.CASE_INSENSITIVE_ORDER);
+        System.out.println("\n=== Sorted Bogie Names (Case-Insensitive) ===");
+        System.out.println(Arrays.toString(mixedCaseBogieNames));
     }
 }
