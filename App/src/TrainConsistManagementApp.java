@@ -1,113 +1,119 @@
-import java.util.*;
+import java.util.regex.Pattern;
 
 public class TrainConsistManagementApp {
 
-    // ✅ Custom Exception for Invalid Capacity
-    static class InvalidBogieCapacityException extends Exception {
-        public InvalidBogieCapacityException(String message) {
+    // Regex pattern for validating cargo codes
+    private static final Pattern CARGO_CODE_PATTERN =
+            Pattern.compile("^CG[A-Z]{3}\\d{3}$");
+
+    // Custom Exception for invalid cargo assignment
+    static class InvalidCargoException extends Exception {
+        public InvalidCargoException(String message) {
             super(message);
         }
     }
 
-    // ✅ Bogie Class
-    static class Bogie {
+    // GoodsBogie class representing a cargo bogie
+    static class GoodsBogie {
         private String bogieId;
-        private int capacity;
-        private String type;
+        private boolean brakeCertified;
+        private boolean hazardous;
+        private boolean hazardCompliant;
+        private String cargoCode;
+        private double loadInTons;
 
-        public Bogie(String bogieId, int capacity, String type)
-                throws InvalidBogieCapacityException {
+        public GoodsBogie(String bogieId, boolean brakeCertified,
+                          boolean hazardous, boolean hazardCompliant) {
             this.bogieId = bogieId;
-            this.type = type;
-            setCapacity(capacity); // Validation through setter
+            this.brakeCertified = brakeCertified;
+            this.hazardous = hazardous;
+            this.hazardCompliant = hazardCompliant;
         }
 
-        public String getBogieId() {
-            return bogieId;
-        }
+        // Method to assign cargo safely
+        public void assignCargo(String cargoCode, double loadInTons)
+                throws InvalidCargoException {
 
-        public int getCapacity() {
-            return capacity;
-        }
-
-        public String getType() {
-            return type;
-        }
-
-        // Method to determine if a bogie is a passenger bogie
-        public boolean isPassengerBogie() {
-            return type.equalsIgnoreCase("Sleeper") ||
-                    type.equalsIgnoreCase("AC") ||
-                    type.equalsIgnoreCase("General") ||
-                    type.equalsIgnoreCase("Chair Car");
-        }
-
-        // ✅ Capacity validation logic
-        public void setCapacity(int capacity)
-                throws InvalidBogieCapacityException {
-
-            if (capacity < 0) {
-                throw new InvalidBogieCapacityException(
-                        "Capacity cannot be negative for Bogie ID: " + bogieId);
+            if (!CARGO_CODE_PATTERN.matcher(cargoCode).matches()) {
+                throw new InvalidCargoException(
+                        "Invalid Cargo Code for Bogie ID: " + bogieId);
             }
 
-            if (isPassengerBogie() && capacity == 0) {
-                throw new InvalidBogieCapacityException(
-                        "Passenger bogie must have capacity greater than zero. Bogie ID: "
-                                + bogieId);
+            if (loadInTons <= 0 || loadInTons > 100) {
+                throw new InvalidCargoException(
+                        "Load must be between 1 and 100 tons for Bogie ID: " + bogieId);
             }
 
-            if (capacity > 200) {
-                throw new InvalidBogieCapacityException(
-                        "Capacity exceeds the maximum allowed limit (200). Bogie ID: "
-                                + bogieId);
+            if (!brakeCertified) {
+                throw new InvalidCargoException(
+                        "Brake system not certified for Bogie ID: " + bogieId);
             }
 
-            this.capacity = capacity;
+            if (hazardous && !hazardCompliant) {
+                throw new InvalidCargoException(
+                        "Hazardous cargo compliance missing for Bogie ID: " + bogieId);
+            }
+
+            this.cargoCode = cargoCode;
+            this.loadInTons = loadInTons;
         }
 
         @Override
         public String toString() {
-            return "Bogie ID: " + bogieId +
-                    ", Capacity: " + capacity +
-                    ", Type: " + type;
+            return "GoodsBogie{" +
+                    "bogieId='" + bogieId + '\'' +
+                    ", cargoCode='" + cargoCode + '\'' +
+                    ", loadInTons=" + loadInTons +
+                    ", brakeCertified=" + brakeCertified +
+                    ", hazardous=" + hazardous +
+                    ", hazardCompliant=" + hazardCompliant +
+                    '}';
         }
     }
 
-    // ✅ Main Method
     public static void main(String[] args) {
-        List<Bogie> bogies = new ArrayList<>();
 
-        // Sample data including invalid cases
-        Object[][] sampleData = {
-                {"B1", 72, "Sleeper"},
-                {"A1", 50, "AC"},
-                {"G1", 90, "General"},
-                {"L1", 0, "Luggage"},      // Valid
-                {"P1", 0, "Power Car"},    // Valid
-                {"S1", -10, "Sleeper"},    // Invalid: Negative
-                {"C1", 0, "Chair Car"},    // Invalid: Zero capacity for passenger
-                {"X1", 250, "AC"}          // Invalid: Exceeds limit
+        System.out.println("=== Safe Cargo Assignment ===");
+
+        // Sample goods bogies
+        GoodsBogie[] bogies = {
+                new GoodsBogie("G001", true, false, true),
+                new GoodsBogie("G002", true, true, true),
+                new GoodsBogie("G003", false, false, true),
+                new GoodsBogie("G004", true, true, false)
         };
 
-        System.out.println("=== Bogie Capacity Validation ===");
+        // Cargo assignments: {cargoCode, load}
+        Object[][] cargoAssignments = {
+                {"CGOIL123", 80.0},   // Valid
+                {"CGGAS456", 95.0},   // Valid hazardous
+                {"INVALID", 50.0},    // Invalid cargo code
+                {"CGCHE789", 120.0}   // Load exceeds limit
+        };
 
-        for (Object[] data : sampleData) {
-            String id = (String) data[0];
-            int capacity = (int) data[1];
-            String type = (String) data[2];
+        // Perform safe cargo assignment
+        for (int i = 0; i < bogies.length; i++) {
+            GoodsBogie bogie = bogies[i];
+            String cargoCode = (String) cargoAssignments[i][0];
+            double load = (double) cargoAssignments[i][1];
 
             try {
-                Bogie bogie = new Bogie(id, capacity, type);
-                bogies.add(bogie);
-                System.out.println("✅ Added: " + bogie);
-            } catch (InvalidBogieCapacityException e) {
+                System.out.println("\nAssigning cargo to Bogie ID: " + bogie.bogieId);
+                bogie.assignCargo(cargoCode, load);
+                System.out.println("✅ Cargo assigned successfully.");
+            } catch (InvalidCargoException e) {
                 System.out.println("❌ Error: " + e.getMessage());
+            } finally {
+                // This block always executes
+                System.out.println("🔄 Assignment attempt completed for Bogie ID: "
+                        + bogie.bogieId);
             }
         }
 
-        // Display valid bogies
-        System.out.println("\n=== Valid Bogies in Train ===");
-        bogies.forEach(System.out::println);
+        // Display final state of all bogies
+        System.out.println("\n=== Final Bogie Status ===");
+        for (GoodsBogie bogie : bogies) {
+            System.out.println(bogie);
+        }
     }
 }
