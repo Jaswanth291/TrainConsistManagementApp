@@ -1,9 +1,30 @@
 import java.util.*;
 
-// Public class name as per previous use cases
+// Public class for the application
 public class TrainConsistManagementApp {
 
-    // Bogie class implementing Comparable for natural sorting by bogieId
+    // ✅ Custom Exception for invalid search input
+    static class InvalidSearchException extends Exception {
+        public InvalidSearchException(String message) {
+            super(message);
+        }
+    }
+
+    // ✅ Custom Exception when bogie is not found
+    static class BogieNotFoundException extends Exception {
+        public BogieNotFoundException(String message) {
+            super(message);
+        }
+    }
+
+    // ✅ Custom Exception for empty dataset
+    static class EmptyDatasetException extends Exception {
+        public EmptyDatasetException(String message) {
+            super(message);
+        }
+    }
+
+    // ✅ Bogie class implementing Comparable for sorting
     static class Bogie implements Comparable<Bogie> {
         private String bogieId;
         private int capacity;
@@ -27,7 +48,6 @@ public class TrainConsistManagementApp {
             return type;
         }
 
-        // Natural ordering based on Bogie ID
         @Override
         public int compareTo(Bogie other) {
             return this.bogieId.compareToIgnoreCase(other.bogieId);
@@ -41,6 +61,36 @@ public class TrainConsistManagementApp {
         }
     }
 
+    // 🔍 Method to perform binary search with exception handling
+    public static Bogie searchBogie(Bogie[] bogies, String searchId)
+            throws InvalidSearchException, BogieNotFoundException, EmptyDatasetException {
+
+        if (bogies == null || bogies.length == 0) {
+            throw new EmptyDatasetException("No bogies available for search.");
+        }
+
+        if (searchId == null || searchId.trim().isEmpty()) {
+            throw new InvalidSearchException("Search ID cannot be empty.");
+        }
+
+        searchId = searchId.toUpperCase();
+
+        // Ensure the array is sorted before searching
+        Arrays.sort(bogies);
+
+        // Create a dummy key for binary search
+        Bogie key = new Bogie(searchId, 0, "");
+
+        int index = Arrays.binarySearch(bogies, key);
+
+        if (index < 0) {
+            throw new BogieNotFoundException(
+                    "Bogie with ID '" + searchId + "' not found.");
+        }
+
+        return bogies[index];
+    }
+
     // Method to display all bogies
     public static void displayBogies(Bogie[] bogies) {
         System.out.println("\n=== List of Bogies ===");
@@ -49,75 +99,77 @@ public class TrainConsistManagementApp {
         }
     }
 
+    // ✅ Main Method
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        // Initialize an array of bogies (unsorted)
+        // Initial dataset
         Bogie[] bogies = {
                 new Bogie("B1", 72, "Sleeper"),
                 new Bogie("A1", 50, "AC"),
                 new Bogie("G1", 90, "General"),
                 new Bogie("C1", 60, "Chair Car"),
                 new Bogie("L1", 0, "Luggage"),
-                new Bogie("P1", 0, "Power Car"),
-                new Bogie("S1", 72, "Sleeper"),
-                new Bogie("A2", 55, "AC")
+                new Bogie("P1", 0, "Power Car")
         };
 
-        // Step 1: Sort the bogies using Arrays.sort()
-        Arrays.sort(bogies);
+        int choice = 0;
 
-        System.out.println("=== Bogies Sorted by Bogie ID ===");
-        displayBogies(bogies);
+        System.out.println("=== Train Consist Management - Search Operations ===");
 
-        // Step 2: Menu-driven binary search
-        int choice;
         do {
-            System.out.println("\n=== Binary Search Menu ===");
-            System.out.println("1. Search for a Bogie by ID");
-            System.out.println("2. Display All Bogies");
-            System.out.println("3. Exit");
-            System.out.print("Enter your choice: ");
+            try {
+                System.out.println("\nMenu:");
+                System.out.println("1. Search Bogie by ID");
+                System.out.println("2. Display All Bogies");
+                System.out.println("3. Clear Dataset (Simulate Empty)");
+                System.out.println("4. Exit");
+                System.out.print("Enter your choice: ");
 
-            while (!scanner.hasNextInt()) {
-                System.out.print("Invalid input. Please enter a number: ");
-                scanner.next();
+                choice = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
+
+                switch (choice) {
+                    case 1:
+                        System.out.print("Enter Bogie ID to search: ");
+                        String searchId = scanner.nextLine();
+
+                        Bogie result = searchBogie(bogies, searchId);
+                        System.out.println("✅ Bogie Found:");
+                        System.out.println(result);
+                        break;
+
+                    case 2:
+                        displayBogies(bogies);
+                        break;
+
+                    case 3:
+                        bogies = new Bogie[0]; // Simulate empty dataset
+                        System.out.println("⚠️ Dataset cleared successfully.");
+                        break;
+
+                    case 4:
+                        System.out.println("Exiting application. Thank you!");
+                        break;
+
+                    default:
+                        System.out.println("❌ Invalid menu choice. Please try again.");
+                }
+
+            } catch (InputMismatchException e) {
+                System.out.println("❌ Invalid input! Please enter a numeric choice.");
+                scanner.nextLine(); // Clear invalid input
+            } catch (InvalidSearchException |
+                     BogieNotFoundException |
+                     EmptyDatasetException e) {
+                System.out.println("❌ Error: " + e.getMessage());
+            } catch (Exception e) {
+                System.out.println("❌ Unexpected error: " + e.getMessage());
+            } finally {
+                System.out.println("🔄 Operation completed.");
             }
-            choice = scanner.nextInt();
-            scanner.nextLine(); // Consume newline
 
-            switch (choice) {
-                case 1:
-                    System.out.print("Enter Bogie ID to search: ");
-                    String searchId = scanner.nextLine().trim().toUpperCase();
-
-                    // Create a dummy bogie object for searching
-                    Bogie key = new Bogie(searchId, 0, "");
-
-                    // Perform binary search
-                    int index = Arrays.binarySearch(bogies, key);
-
-                    if (index >= 0) {
-                        System.out.println("✅ Bogie Found at Index: " + index);
-                        System.out.println("Details: " + bogies[index]);
-                    } else {
-                        System.out.println("❌ Bogie with ID '" + searchId + "' not found.");
-                    }
-                    break;
-
-                case 2:
-                    displayBogies(bogies);
-                    break;
-
-                case 3:
-                    System.out.println("Exiting application. Thank you!");
-                    break;
-
-                default:
-                    System.out.println("❌ Invalid choice. Please try again.");
-            }
-
-        } while (choice != 3);
+        } while (choice != 4);
 
         scanner.close();
     }
