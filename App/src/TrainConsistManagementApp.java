@@ -1,98 +1,68 @@
-import java.util.*;
-import java.util.stream.*;
+import java.util.Scanner;
+import java.util.regex.Pattern;
 
 public class TrainConsistManagementApp {
 
-    // Bogie class representing each train bogie
-    static class Bogie {
-        private String bogieId;
-        private int capacity;
-        private String type;
+    // Regex patterns for validation
+    private static final String TRAIN_ID_REGEX = "^[A-Z]{2}\\d{4}$";
+    private static final String CARGO_CODE_REGEX = "^CG[A-Z]{3}\\d{3}$";
 
-        // Constructor
-        public Bogie(String bogieId, int capacity, String type) {
-            this.bogieId = bogieId;
-            this.capacity = capacity;
-            this.type = type;
-        }
+    // Precompiled patterns for better performance
+    private static final Pattern TRAIN_ID_PATTERN = Pattern.compile(TRAIN_ID_REGEX);
+    private static final Pattern CARGO_CODE_PATTERN = Pattern.compile(CARGO_CODE_REGEX);
 
-        // Getter methods
-        public String getBogieId() {
-            return bogieId;
-        }
+    // Method to validate Train ID
+    public static boolean isValidTrainId(String trainId) {
+        return TRAIN_ID_PATTERN.matcher(trainId).matches();
+    }
 
-        public int getCapacity() {
-            return capacity;
-        }
-
-        public String getType() {
-            return type;
-        }
-
-        // Method to determine if a bogie is a passenger bogie
-        public boolean isPassengerBogie() {
-            return type.equalsIgnoreCase("Sleeper") ||
-                    type.equalsIgnoreCase("AC") ||
-                    type.equalsIgnoreCase("General") ||
-                    type.equalsIgnoreCase("Chair Car");
-        }
-
-        // toString method for displaying bogie details
-        @Override
-        public String toString() {
-            return "Bogie ID: " + bogieId +
-                    ", Capacity: " + capacity +
-                    ", Type: " + type;
-        }
+    // Method to validate Cargo Code
+    public static boolean isValidCargoCode(String cargoCode) {
+        return CARGO_CODE_PATTERN.matcher(cargoCode).matches();
     }
 
     public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
 
-        // Creating a list of bogies in the train
-        List<Bogie> bogies = Arrays.asList(
-                new Bogie("B1", 72, "Sleeper"),
-                new Bogie("B2", 72, "Sleeper"),
-                new Bogie("A1", 50, "AC"),
-                new Bogie("A2", 50, "AC"),
-                new Bogie("G1", 90, "General"),
-                new Bogie("C1", 60, "Chair Car"),
-                new Bogie("L1", 0, "Luggage"),
-                new Bogie("P1", 0, "Power Car")
-        );
+        System.out.println("=== Train Consist Management - Validation ===");
 
-        // Display all bogies
-        System.out.println("=== Train Bogies ===");
-        bogies.forEach(System.out::println);
+        // Input and validate Train ID
+        System.out.print("Enter Train ID (e.g., SR1234): ");
+        String trainId = scanner.nextLine().trim();
 
-        // Calculate total seats using reduce()
-        int totalSeats = bogies.stream()
-                .map(Bogie::getCapacity)     // Extract capacities
-                .reduce(0, Integer::sum);    // Sum all capacities
+        if (isValidTrainId(trainId)) {
+            System.out.println("✅ Valid Train ID.");
+        } else {
+            System.out.println("❌ Invalid Train ID. Format must be: Two uppercase letters followed by four digits (e.g., SR1234).");
+        }
 
-        System.out.println("\nTotal Seats in Train (All Bogies): " + totalSeats);
+        // Input and validate Cargo Code
+        System.out.print("\nEnter Cargo Code (e.g., CGOIL123): ");
+        String cargoCode = scanner.nextLine().trim();
 
-        // Calculate total seats only for passenger bogies
-        int passengerSeats = bogies.stream()
-                .filter(Bogie::isPassengerBogie)
-                .map(Bogie::getCapacity)
-                .reduce(0, Integer::sum);
+        if (isValidCargoCode(cargoCode)) {
+            System.out.println("✅ Valid Cargo Code.");
+        } else {
+            System.out.println("❌ Invalid Cargo Code. Format must be: 'CG' + three uppercase letters + three digits (e.g., CGOIL123).");
+        }
 
-        System.out.println("Total Seats in Passenger Bogies: " + passengerSeats);
+        // Demonstration with sample values
+        System.out.println("\n=== Sample Validation Tests ===");
+        String[] sampleTrainIds = {"SR1234", "er5678", "WR0001", "S12345", "AB12C4"};
+        String[] sampleCargoCodes = {"CGOIL123", "CGFOO456", "CGcar789", "CG12A345", "CGABC12"};
 
-        // Alternative approach using Optional reduce (without identity)
-        Optional<Integer> optionalTotal = bogies.stream()
-                .map(Bogie::getCapacity)
-                .reduce(Integer::sum);
+        System.out.println("\nTrain ID Tests:");
+        for (String id : sampleTrainIds) {
+            System.out.println(id + " -> " +
+                    (isValidTrainId(id) ? "Valid" : "Invalid"));
+        }
 
-        optionalTotal.ifPresent(total ->
-                System.out.println("Total Seats (Using Optional Reduce): " + total)
-        );
+        System.out.println("\nCargo Code Tests:");
+        for (String code : sampleCargoCodes) {
+            System.out.println(code + " -> " +
+                    (isValidCargoCode(code) ? "Valid" : "Invalid"));
+        }
 
-        // Comparison using sum() for reference
-        int totalUsingSum = bogies.stream()
-                .mapToInt(Bogie::getCapacity)
-                .sum();
-
-        System.out.println("Total Seats (Using sum()): " + totalUsingSum);
+        scanner.close();
     }
 }
