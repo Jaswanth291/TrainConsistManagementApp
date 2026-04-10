@@ -29,14 +29,6 @@ public class TrainConsistManagementApp {
             return type;
         }
 
-        // Method to determine if a bogie is a passenger bogie
-        public boolean isPassengerBogie() {
-            return type.equalsIgnoreCase("Sleeper") ||
-                    type.equalsIgnoreCase("AC") ||
-                    type.equalsIgnoreCase("General") ||
-                    type.equalsIgnoreCase("Chair Car");
-        }
-
         // toString method for displaying bogie details
         @Override
         public String toString() {
@@ -47,37 +39,58 @@ public class TrainConsistManagementApp {
     }
 
     public static void main(String[] args) {
-        // Creating a list of bogies
-        List<Bogie> bogies = new ArrayList<>();
 
-        // Adding sample bogie data
-        bogies.add(new Bogie("B1", 72, "Sleeper"));
-        bogies.add(new Bogie("A1", 50, "AC"));
-        bogies.add(new Bogie("G1", 90, "General"));
-        bogies.add(new Bogie("L1", 0, "Luggage"));
-        bogies.add(new Bogie("P1", 0, "Power Car"));
-        bogies.add(new Bogie("C1", 60, "Chair Car"));
+        // Creating a list of bogies
+        List<Bogie> bogies = Arrays.asList(
+                new Bogie("B1", 72, "Sleeper"),
+                new Bogie("B2", 72, "Sleeper"),
+                new Bogie("A1", 50, "AC"),
+                new Bogie("A2", 50, "AC"),
+                new Bogie("G1", 90, "General"),
+                new Bogie("C1", 60, "Chair Car"),
+                new Bogie("L1", 0, "Luggage"),
+                new Bogie("P1", 0, "Power Car")
+        );
 
         // Display all bogies
         System.out.println("=== All Bogies ===");
         bogies.forEach(System.out::println);
 
-        // Filtering passenger bogies using Streams
-        List<Bogie> passengerBogies = bogies.stream()
-                .filter(Bogie::isPassengerBogie)
-                .collect(Collectors.toList());
+        // Group bogies by type (case-insensitive)
+        Map<String, List<Bogie>> bogiesByType = bogies.stream()
+                .collect(Collectors.groupingBy(
+                        b -> b.getType().toUpperCase()
+                ));
 
-        // Display filtered passenger bogies
-        System.out.println("\n=== Passenger Bogies ===");
-        passengerBogies.forEach(System.out::println);
+        // Display grouped bogies
+        System.out.println("\n=== Bogies Grouped by Type ===");
+        for (Map.Entry<String, List<Bogie>> entry : bogiesByType.entrySet()) {
+            System.out.println("\nType: " + entry.getKey());
+            entry.getValue().forEach(b -> System.out.println("  " + b));
+        }
 
-        // Example: Filtering passenger bogies with capacity greater than 60
-        List<Bogie> highCapacityPassengerBogies = bogies.stream()
-                .filter(Bogie::isPassengerBogie)
-                .filter(b -> b.getCapacity() > 60)
-                .collect(Collectors.toList());
+        // Additional Example: Count the number of bogies in each type
+        Map<String, Long> bogieCountByType = bogies.stream()
+                .collect(Collectors.groupingBy(
+                        b -> b.getType().toUpperCase(),
+                        Collectors.counting()
+                ));
 
-        System.out.println("\n=== High Capacity Passenger Bogies (> 60) ===");
-        highCapacityPassengerBogies.forEach(System.out::println);
+        System.out.println("\n=== Number of Bogies by Type ===");
+        bogieCountByType.forEach((type, count) ->
+                System.out.println("Type: " + type + " -> Count: " + count)
+        );
+
+        // Additional Example: Total capacity per bogie type
+        Map<String, Integer> totalCapacityByType = bogies.stream()
+                .collect(Collectors.groupingBy(
+                        b -> b.getType().toUpperCase(),
+                        Collectors.summingInt(Bogie::getCapacity)
+                ));
+
+        System.out.println("\n=== Total Capacity by Bogie Type ===");
+        totalCapacityByType.forEach((type, totalCapacity) ->
+                System.out.println("Type: " + type + " -> Total Capacity: " + totalCapacity)
+        );
     }
 }
