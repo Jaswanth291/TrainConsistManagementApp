@@ -1,38 +1,83 @@
-import java.util.*;
+import java.util.Scanner;
 
 public class TrainConsistManagementApp {
 
+    // Bogie class representing each train bogie
+    static class Bogie {
+        private String bogieId;
+        private int capacity;
+        private String type;
+
+        public Bogie(String bogieId, int capacity, String type) {
+            this.bogieId = bogieId;
+            this.capacity = capacity;
+            this.type = type;
+        }
+
+        public String getBogieId() {
+            return bogieId;
+        }
+
+        public int getCapacity() {
+            return capacity;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        @Override
+        public String toString() {
+            return "Bogie ID: " + bogieId +
+                    ", Capacity: " + capacity +
+                    ", Type: " + type;
+        }
+    }
+
+    // 🔍 Linear Search Method
+    public static int linearSearch(Bogie[] bogies, String targetId) {
+        for (int i = 0; i < bogies.length; i++) {
+            if (bogies[i].getBogieId().equalsIgnoreCase(targetId)) {
+                return i; // Return index if found
+            }
+        }
+        return -1; // Return -1 if not found
+    }
+
     public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
 
-        // Array of bogie names (IDs)
-        String[] bogieNames = {
-                "B1", "A1", "G1", "S1", "C1", "L1", "P1", "A2", "B2"
+        // Creating an array of bogies
+        Bogie[] bogies = {
+                new Bogie("B1", 72, "Sleeper"),
+                new Bogie("A1", 50, "AC"),
+                new Bogie("G1", 90, "General"),
+                new Bogie("C1", 60, "Chair Car"),
+                new Bogie("L1", 0, "Luggage"),
+                new Bogie("P1", 0, "Power Car")
         };
 
-        // Display original array
-        System.out.println("=== Original Bogie Names ===");
-        System.out.println(Arrays.toString(bogieNames));
+        // Display all bogies
+        System.out.println("=== Train Bogies ===");
+        for (Bogie b : bogies) {
+            System.out.println(b);
+        }
 
-        // 🔹 1. Sort in Ascending Order (Natural/Alphabetical Order)
-        Arrays.sort(bogieNames);
-        System.out.println("\n=== Sorted Bogie Names (Ascending) ===");
-        System.out.println(Arrays.toString(bogieNames));
+        // Accept user input for search
+        System.out.print("\nEnter Bogie ID to search: ");
+        String searchId = scanner.nextLine().trim();
 
-        // 🔹 2. Sort in Descending Order
-        Arrays.sort(bogieNames, Collections.reverseOrder());
-        System.out.println("\n=== Sorted Bogie Names (Descending) ===");
-        System.out.println(Arrays.toString(bogieNames));
+        // Perform linear search
+        int index = linearSearch(bogies, searchId);
 
-        // 🔹 3. Case-Insensitive Sorting Example
-        String[] mixedCaseBogieNames = {
-                "b1", "A1", "g1", "S1", "c1", "L1", "p1"
-        };
+        // Display result
+        if (index != -1) {
+            System.out.println("\n✅ Bogie Found at Index: " + index);
+            System.out.println("Details: " + bogies[index]);
+        } else {
+            System.out.println("\n❌ Bogie with ID '" + searchId + "' not found.");
+        }
 
-        System.out.println("\n=== Mixed Case Bogie Names (Original) ===");
-        System.out.println(Arrays.toString(mixedCaseBogieNames));
-
-        Arrays.sort(mixedCaseBogieNames, String.CASE_INSENSITIVE_ORDER);
-        System.out.println("\n=== Sorted Bogie Names (Case-Insensitive) ===");
-        System.out.println(Arrays.toString(mixedCaseBogieNames));
+        scanner.close();
     }
 }
