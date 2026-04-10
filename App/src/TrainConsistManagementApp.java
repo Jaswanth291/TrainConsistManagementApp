@@ -1,5 +1,5 @@
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.stream.*;
 
 public class TrainConsistManagementApp {
 
@@ -29,6 +29,14 @@ public class TrainConsistManagementApp {
             return type;
         }
 
+        // Method to determine if a bogie is a passenger bogie
+        public boolean isPassengerBogie() {
+            return type.equalsIgnoreCase("Sleeper") ||
+                    type.equalsIgnoreCase("AC") ||
+                    type.equalsIgnoreCase("General") ||
+                    type.equalsIgnoreCase("Chair Car");
+        }
+
         // toString method for displaying bogie details
         @Override
         public String toString() {
@@ -40,7 +48,7 @@ public class TrainConsistManagementApp {
 
     public static void main(String[] args) {
 
-        // Creating a list of bogies
+        // Creating a list of bogies in the train
         List<Bogie> bogies = Arrays.asList(
                 new Bogie("B1", 72, "Sleeper"),
                 new Bogie("B2", 72, "Sleeper"),
@@ -53,44 +61,38 @@ public class TrainConsistManagementApp {
         );
 
         // Display all bogies
-        System.out.println("=== All Bogies ===");
+        System.out.println("=== Train Bogies ===");
         bogies.forEach(System.out::println);
 
-        // Group bogies by type (case-insensitive)
-        Map<String, List<Bogie>> bogiesByType = bogies.stream()
-                .collect(Collectors.groupingBy(
-                        b -> b.getType().toUpperCase()
-                ));
+        // Calculate total seats using reduce()
+        int totalSeats = bogies.stream()
+                .map(Bogie::getCapacity)     // Extract capacities
+                .reduce(0, Integer::sum);    // Sum all capacities
 
-        // Display grouped bogies
-        System.out.println("\n=== Bogies Grouped by Type ===");
-        for (Map.Entry<String, List<Bogie>> entry : bogiesByType.entrySet()) {
-            System.out.println("\nType: " + entry.getKey());
-            entry.getValue().forEach(b -> System.out.println("  " + b));
-        }
+        System.out.println("\nTotal Seats in Train (All Bogies): " + totalSeats);
 
-        // Additional Example: Count the number of bogies in each type
-        Map<String, Long> bogieCountByType = bogies.stream()
-                .collect(Collectors.groupingBy(
-                        b -> b.getType().toUpperCase(),
-                        Collectors.counting()
-                ));
+        // Calculate total seats only for passenger bogies
+        int passengerSeats = bogies.stream()
+                .filter(Bogie::isPassengerBogie)
+                .map(Bogie::getCapacity)
+                .reduce(0, Integer::sum);
 
-        System.out.println("\n=== Number of Bogies by Type ===");
-        bogieCountByType.forEach((type, count) ->
-                System.out.println("Type: " + type + " -> Count: " + count)
+        System.out.println("Total Seats in Passenger Bogies: " + passengerSeats);
+
+        // Alternative approach using Optional reduce (without identity)
+        Optional<Integer> optionalTotal = bogies.stream()
+                .map(Bogie::getCapacity)
+                .reduce(Integer::sum);
+
+        optionalTotal.ifPresent(total ->
+                System.out.println("Total Seats (Using Optional Reduce): " + total)
         );
 
-        // Additional Example: Total capacity per bogie type
-        Map<String, Integer> totalCapacityByType = bogies.stream()
-                .collect(Collectors.groupingBy(
-                        b -> b.getType().toUpperCase(),
-                        Collectors.summingInt(Bogie::getCapacity)
-                ));
+        // Comparison using sum() for reference
+        int totalUsingSum = bogies.stream()
+                .mapToInt(Bogie::getCapacity)
+                .sum();
 
-        System.out.println("\n=== Total Capacity by Bogie Type ===");
-        totalCapacityByType.forEach((type, totalCapacity) ->
-                System.out.println("Type: " + type + " -> Total Capacity: " + totalCapacity)
-        );
+        System.out.println("Total Seats (Using sum()): " + totalUsingSum);
     }
 }
