@@ -1,121 +1,107 @@
 import java.util.*;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import java.util.stream.*;
 
 public class TrainConsistManagementApp {
 
-    // Regex pattern for validating cargo codes
-    private static final Pattern CARGO_CODE_PATTERN =
-            Pattern.compile("^CG[A-Z]{3}\\d{3}$");
-
-    // GoodsBogie class representing cargo bogies
-    static class GoodsBogie {
+    // Bogie class representing each train bogie
+    static class Bogie {
         private String bogieId;
-        private String cargoCode;
-        private double loadInTons;
-        private boolean brakeCertified;
-        private boolean hazardous;
-        private boolean hazardCompliant;
+        private int capacity;
+        private String type;
 
-        public GoodsBogie(String bogieId, String cargoCode,
-                          double loadInTons, boolean brakeCertified,
-                          boolean hazardous, boolean hazardCompliant) {
+        public Bogie(String bogieId, int capacity, String type) {
             this.bogieId = bogieId;
-            this.cargoCode = cargoCode;
-            this.loadInTons = loadInTons;
-            this.brakeCertified = brakeCertified;
-            this.hazardous = hazardous;
-            this.hazardCompliant = hazardCompliant;
+            this.capacity = capacity;
+            this.type = type;
         }
 
-        public String getBogieId() {
-            return bogieId;
+        public int getCapacity() {
+            return capacity;
         }
 
-        public String getCargoCode() {
-            return cargoCode;
+        public String getType() {
+            return type;
         }
 
-        public double getLoadInTons() {
-            return loadInTons;
-        }
-
-        public boolean isBrakeCertified() {
-            return brakeCertified;
-        }
-
-        public boolean isHazardous() {
-            return hazardous;
-        }
-
-        public boolean isHazardCompliant() {
-            return hazardCompliant;
-        }
-
-        // Method to check safety compliance
-        public boolean isSafetyCompliant() {
-            boolean validCargoCode =
-                    CARGO_CODE_PATTERN.matcher(cargoCode).matches();
-            boolean withinLoadLimit = loadInTons <= 100;
-            boolean brakeOk = brakeCertified;
-            boolean hazardOk = !hazardous || hazardCompliant;
-
-            return validCargoCode && withinLoadLimit && brakeOk && hazardOk;
-        }
-
-        @Override
-        public String toString() {
-            return "GoodsBogie{" +
-                    "bogieId='" + bogieId + '\'' +
-                    ", cargoCode='" + cargoCode + '\'' +
-                    ", loadInTons=" + loadInTons +
-                    ", brakeCertified=" + brakeCertified +
-                    ", hazardous=" + hazardous +
-                    ", hazardCompliant=" + hazardCompliant +
-                    '}';
+        // Method to identify passenger bogies
+        public boolean isPassengerBogie() {
+            return type.equalsIgnoreCase("Sleeper") ||
+                    type.equalsIgnoreCase("AC") ||
+                    type.equalsIgnoreCase("General") ||
+                    type.equalsIgnoreCase("Chair Car");
         }
     }
 
     public static void main(String[] args) {
 
-        // Sample goods bogies
-        List<GoodsBogie> goodsBogies = Arrays.asList(
-                new GoodsBogie("G001", "CGOIL123", 80, true, false, true),
-                new GoodsBogie("G002", "CGCHE456", 120, true, false, true), // Overload
-                new GoodsBogie("G003", "CGGAS789", 70, false, true, true),  // Brake not certified
-                new GoodsBogie("G004", "INVALID", 60, true, false, true),   // Invalid cargo code
-                new GoodsBogie("G005", "CGTOX111", 90, true, true, false),  // Hazard non-compliance
-                new GoodsBogie("G006", "CGFOO222", 95, true, true, true)    // Fully compliant
-        );
+        // Generate a large dataset of bogies for performance testing
+        List<Bogie> bogies = new ArrayList<>();
+        String[] types = {"Sleeper", "AC", "General", "Chair Car", "Luggage", "Power Car"};
+        Random random = new Random();
 
-        // Display all goods bogies
-        System.out.println("=== All Goods Bogies ===");
-        goodsBogies.forEach(System.out::println);
+        int dataSize = 1_000_000; // Number of bogies
 
-        // Filter compliant bogies
-        List<GoodsBogie> compliantBogies = goodsBogies.stream()
-                .filter(GoodsBogie::isSafetyCompliant)
-                .collect(Collectors.toList());
+        for (int i = 0; i < dataSize; i++) {
+            String type = types[random.nextInt(types.length)];
+            int capacity = type.equals("Luggage") || type.equals("Power Car")
+                    ? 0
+                    : 40 + random.nextInt(60); // Capacity between 40 and 100
+            bogies.add(new Bogie("B" + i, capacity, type));
+        }
 
-        // Filter non-compliant bogies
-        List<GoodsBogie> nonCompliantBogies = goodsBogies.stream()
-                .filter(b -> !b.isSafetyCompliant())
-                .collect(Collectors.toList());
+        System.out.println("Dataset size: " + dataSize);
+
+        // 🔹 1. Using Traditional For-Loop
+        long startLoop = System.nanoTime();
+
+        int totalSeatsLoop = 0;
+        for (Bogie b : bogies) {
+            if (b.isPassengerBogie()) {
+                totalSeatsLoop += b.getCapacity();
+            }
+        }
+
+        long endLoop = System.nanoTime();
+        long loopTime = endLoop - startLoop;
+
+        // 🔹 2. Using Sequential Stream
+        long startStream = System.nanoTime();
+
+        int totalSeatsStream = bogies.stream()
+                .filter(Bogie::isPassengerBogie)
+                .mapToInt(Bogie::getCapacity)
+                .sum();
+
+        long endStream = System.nanoTime();
+        long streamTime = endStream - startStream;
+
+        // 🔹 3. Using Parallel Stream (Optional Enhancement)
+        long startParallel = System.nanoTime();
+
+        int totalSeatsParallel = bogies.parallelStream()
+                .filter(Bogie::isPassengerBogie)
+                .mapToInt(Bogie::getCapacity)
+                .sum();
+
+        long endParallel = System.nanoTime();
+        long parallelTime = endParallel - startParallel;
 
         // Display results
-        System.out.println("\n=== Safety Compliant Goods Bogies ===");
-        compliantBogies.forEach(System.out::println);
+        System.out.println("\n=== Results ===");
+        System.out.println("Total Seats (Loop): " + totalSeatsLoop);
+        System.out.println("Total Seats (Stream): " + totalSeatsStream);
+        System.out.println("Total Seats (Parallel Stream): " + totalSeatsParallel);
 
-        System.out.println("\n=== Non-Compliant Goods Bogies ===");
-        nonCompliantBogies.forEach(System.out::println);
+        System.out.println("\n=== Performance Comparison (in milliseconds) ===");
+        System.out.printf("For-Loop Time: %.3f ms%n", loopTime / 1_000_000.0);
+        System.out.printf("Stream Time: %.3f ms%n", streamTime / 1_000_000.0);
+        System.out.printf("Parallel Stream Time: %.3f ms%n", parallelTime / 1_000_000.0);
 
-        // Compliance summary
-        long compliantCount = compliantBogies.size();
-        long nonCompliantCount = nonCompliantBogies.size();
-
-        System.out.println("\n=== Compliance Summary ===");
-        System.out.println("Total Goods Bogies: " + goodsBogies.size());
-        System.out.println("Compliant Bogies: " + compliantCount);
-        System.out.println("Non-Compliant Bogies: " + nonCompliantCount);
+        // Determine the fastest approach
+        long minTime = Math.min(loopTime, Math.min(streamTime, parallelTime));
+        System.out.println("\nFastest Approach: " +
+                (minTime == loopTime ? "For-Loop"
+                        : (minTime == streamTime ? "Sequential Stream"
+                        : "Parallel Stream")));
     }
 }
