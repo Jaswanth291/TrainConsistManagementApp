@@ -1,98 +1,176 @@
 import java.util.*;
 
-// Bogie class
-class Bogie {
-    String bogieId;
-    String type;
-    int capacity;
-
-    Bogie(String bogieId, String type, int capacity) {
-        this.bogieId = bogieId;
-        this.type = type;
-        this.capacity = capacity;
-    }
-
-    @Override
-    public String toString() {
-        return bogieId + " (" + type + ", Cap:" + capacity + ")";
-    }
-}
-
-// Train class using HashMap
-class Train {
-    String trainName;
-    HashMap<String, Integer> bogieCapacityMap; // bogieId → capacity
-
-    Train(String trainName) {
-        this.trainName = trainName;
-        bogieCapacityMap = new HashMap<>();
-    }
-
-    // Add bogie
-    void addBogie(Bogie b) {
-        bogieCapacityMap.put(b.bogieId, b.capacity);
-        System.out.println("Added: " + b);
-    }
-
-    // Get capacity of a bogie
-    void getCapacity(String bogieId) {
-        if (bogieCapacityMap.containsKey(bogieId)) {
-            System.out.println("Capacity of " + bogieId + ": " + bogieCapacityMap.get(bogieId));
-        } else {
-            System.out.println("Bogie not found: " + bogieId);
-        }
-    }
-
-    // Remove bogie
-    void removeBogie(String bogieId) {
-        if (bogieCapacityMap.remove(bogieId) != null) {
-            System.out.println("Removed bogie: " + bogieId);
-        } else {
-            System.out.println("Bogie not found!");
-        }
-    }
-
-    // Display all bogies
-    void displayAll() {
-        System.out.println("\nTrain: " + trainName);
-        for (Map.Entry<String, Integer> entry : bogieCapacityMap.entrySet()) {
-            System.out.println(entry.getKey() + " → Capacity: " + entry.getValue());
-        }
-    }
-
-    // Total capacity
-    void totalCapacity() {
-        int total = 0;
-        for (int cap : bogieCapacityMap.values()) {
-            total += cap;
-        }
-        System.out.println("\nTotal Capacity: " + total);
-    }
-}
-
-// Main class
+// Public class for the application
 public class TrainConsistManagementApp {
 
+    // ✅ Custom Exception for invalid search input
+    static class InvalidSearchException extends Exception {
+        public InvalidSearchException(String message) {
+            super(message);
+        }
+    }
+
+    // ✅ Custom Exception when bogie is not found
+    static class BogieNotFoundException extends Exception {
+        public BogieNotFoundException(String message) {
+            super(message);
+        }
+    }
+
+    // ✅ Custom Exception for empty dataset
+    static class EmptyDatasetException extends Exception {
+        public EmptyDatasetException(String message) {
+            super(message);
+        }
+    }
+
+    // ✅ Bogie class implementing Comparable for sorting
+    static class Bogie implements Comparable<Bogie> {
+        private String bogieId;
+        private int capacity;
+        private String type;
+
+        public Bogie(String bogieId, int capacity, String type) {
+            this.bogieId = bogieId.toUpperCase(); // Normalize for case-insensitive search
+            this.capacity = capacity;
+            this.type = type;
+        }
+
+        public String getBogieId() {
+            return bogieId;
+        }
+
+        public int getCapacity() {
+            return capacity;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        @Override
+        public int compareTo(Bogie other) {
+            return this.bogieId.compareToIgnoreCase(other.bogieId);
+        }
+
+        @Override
+        public String toString() {
+            return "Bogie ID: " + bogieId +
+                    ", Capacity: " + capacity +
+                    ", Type: " + type;
+        }
+    }
+
+    // 🔍 Method to perform binary search with exception handling
+    public static Bogie searchBogie(Bogie[] bogies, String searchId)
+            throws InvalidSearchException, BogieNotFoundException, EmptyDatasetException {
+
+        if (bogies == null || bogies.length == 0) {
+            throw new EmptyDatasetException("No bogies available for search.");
+        }
+
+        if (searchId == null || searchId.trim().isEmpty()) {
+            throw new InvalidSearchException("Search ID cannot be empty.");
+        }
+
+        searchId = searchId.toUpperCase();
+
+        // Ensure the array is sorted before searching
+        Arrays.sort(bogies);
+
+        // Create a dummy key for binary search
+        Bogie key = new Bogie(searchId, 0, "");
+
+        int index = Arrays.binarySearch(bogies, key);
+
+        if (index < 0) {
+            throw new BogieNotFoundException(
+                    "Bogie with ID '" + searchId + "' not found.");
+        }
+
+        return bogies[index];
+    }
+
+    // Method to display all bogies
+    public static void displayBogies(Bogie[] bogies) {
+        System.out.println("\n=== List of Bogies ===");
+        for (Bogie b : bogies) {
+            System.out.println(b);
+        }
+    }
+
+    // ✅ Main Method
     public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
 
-        Train train = new Train("Chennai Express");
+        // Initial dataset
+        Bogie[] bogies = {
+                new Bogie("B1", 72, "Sleeper"),
+                new Bogie("A1", 50, "AC"),
+                new Bogie("G1", 90, "General"),
+                new Bogie("C1", 60, "Chair Car"),
+                new Bogie("L1", 0, "Luggage"),
+                new Bogie("P1", 0, "Power Car")
+        };
 
-        train.addBogie(new Bogie("S1", "Sleeper", 72));
-        train.addBogie(new Bogie("S2", "Sleeper", 72));
-        train.addBogie(new Bogie("A1", "AC", 50));
-        train.addBogie(new Bogie("G1", "General", 100));
+        int choice = 0;
 
-        train.displayAll();
+        System.out.println("=== Train Consist Management - Search Operations ===");
 
-        // Lookup
-        train.getCapacity("A1");
+        do {
+            try {
+                System.out.println("\nMenu:");
+                System.out.println("1. Search Bogie by ID");
+                System.out.println("2. Display All Bogies");
+                System.out.println("3. Clear Dataset (Simulate Empty)");
+                System.out.println("4. Exit");
+                System.out.print("Enter your choice: ");
 
-        // Remove
-        train.removeBogie("S2");
+                choice = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
 
-        train.displayAll();
+                switch (choice) {
+                    case 1:
+                        System.out.print("Enter Bogie ID to search: ");
+                        String searchId = scanner.nextLine();
 
-        // Total capacity
-        train.totalCapacity();
+                        Bogie result = searchBogie(bogies, searchId);
+                        System.out.println("✅ Bogie Found:");
+                        System.out.println(result);
+                        break;
+
+                    case 2:
+                        displayBogies(bogies);
+                        break;
+
+                    case 3:
+                        bogies = new Bogie[0]; // Simulate empty dataset
+                        System.out.println("⚠️ Dataset cleared successfully.");
+                        break;
+
+                    case 4:
+                        System.out.println("Exiting application. Thank you!");
+                        break;
+
+                    default:
+                        System.out.println("❌ Invalid menu choice. Please try again.");
+                }
+
+            } catch (InputMismatchException e) {
+                System.out.println("❌ Invalid input! Please enter a numeric choice.");
+                scanner.nextLine(); // Clear invalid input
+            } catch (InvalidSearchException |
+                     BogieNotFoundException |
+                     EmptyDatasetException e) {
+                System.out.println("❌ Error: " + e.getMessage());
+            } catch (Exception e) {
+                System.out.println("❌ Unexpected error: " + e.getMessage());
+            } finally {
+                System.out.println("🔄 Operation completed.");
+            }
+
+        } while (choice != 4);
+
+        scanner.close();
     }
 }
